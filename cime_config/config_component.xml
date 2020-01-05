@@ -87,6 +87,7 @@
       <value compset="_CLM40%[^_]*CROP" >-crop on</value>
       <value compset="_CLM45"           >-phys clm4_5</value>
       <value compset="_CLM50"           >-phys clm5_0</value>
+      <value compset="_CTSM51"          >-phys ctsm5_1</value>
     </values>
     <group>build_component_clm</group>
     <file>env_build.xml</file>

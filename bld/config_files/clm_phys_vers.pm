@@ -33,8 +33,8 @@ use bigint;
 
 my $major_mask      = 1000000;
 my $minor_mask      =    1000;
-my @version_strings = (       "clm4_0",                     "clm4_5",      "clm5_0" );
-my @version_long    = (  4*$major_mask,  4*$major_mask+5*$minor_mask, 5*$major_mask );
+my @version_strings = (       "clm4_0",                     "clm4_5",      "clm5_0", "ctsm5_1" );
+my @version_long    = (  4*$major_mask,  4*$major_mask+5*$minor_mask, 5*$major_mask, 5*$major_mask+1*$minor_mask );
 
 #-------------------------------------------------------------------------------
 
@@ -107,6 +107,8 @@ sub as_float {
      use bignum;
 
      my $phys  = $major*1.0 + $minor/10.0   + $rev / 10000.0;
+     use bigint;
+     no  bignum;
      return( $phys );
   }
 }
@@ -145,12 +147,12 @@ if ( ! defined(caller) && $#ARGV == -1 ) {
    require Test::More;
    Test::More->import( );
 
-   plan( tests=>13 );
+   plan( tests=>18 );
 
    sub testit {
       print "unit tester\n";
       my %lastv;
-      my @vers_list = ( "clm4_0", "clm4_5", "clm5_0" );
+      my @vers_list = ( "clm4_0", "clm4_5", "clm5_0", "ctsm5_1" );
       foreach my $vers ( @vers_list ) {
          my $phys = config_files::clm_phys_vers->new($vers);
          isa_ok($phys, "config_files::clm_phys_vers", "created clm_phys_vers object");
@@ -174,15 +176,21 @@ if ( ! defined(caller) && $#ARGV == -1 ) {
          $lastv{'float'}  = $phys->as_float();
       }
       my $phys = config_files::clm_phys_vers->new("clm4_0");
-      is( 4.0, $phys->as_float(), "Make sure clm4_0 correct float value" );
+      is( $phys->as_float(), 4.0, "Make sure clm4_0 correct float value" );
       $phys = config_files::clm_phys_vers->new("clm4_5");
+      use bigint;
+      no bignum;
+      is( $phys->as_float(), 4.5, "Make sure clm4_5 correct float value" );
       no  bigint;
       use bignum;
-      is( 4.5, $phys->as_float(), "Make sure clm4_5 correct float value" );
-      no bignum;
-      use bigint;
       $phys = config_files::clm_phys_vers->new("clm5_0");
-      is( 5.0, $phys->as_float(), "Make sure clm5_0 correct float value" );
+      is( $phys->as_float(), 5.0, "Make sure clm5_0 correct float value" );
+      $phys = config_files::clm_phys_vers->new("ctsm5_1");
+      use bigint;
+      no bignum;
+      is( $phys->as_float(), 5.1, "Make sure ctsm5_1 correct float value" );
+      no  bigint;
+      use bignum;
       print "\nSuccessfully ran all tests\n";
    }
 }

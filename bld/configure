@@ -69,7 +69,7 @@ OPTIONS
      -nofire                Turn off wildfires for BGC setting of CN 
                             (default includes fire for CN)
      -noio                  Turn history output completely off (typically for testing).
-     -phys <name>           Value of clm4_0, clm4_5, or clm5_0 (default is clm4_0)   
+     -phys <name>           Value of clm4_0, clm4_5, clm5_0, ctsm5_1 (default is clm4_0)   
      -silent [or -s]        Turns on silent mode - only fatal messages issued.
      -sitespf_pt <name>     Setup for the given site specific single-point resolution.
      -snicar_frc <name>     Turn on SNICAR radiative forcing calculation. [on | off] 

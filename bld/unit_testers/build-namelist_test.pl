@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 838;
+my $ntests = 1038;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 504;
+   $ntests += 654;
 }
 plan( tests=>$ntests );
 
@@ -1281,54 +1281,56 @@ foreach my $res ( @glc_res ) {
       &cleanup();
    }
 }
-# Transient 20th Century simulations
-$mode = "-phys clm5_0";
-system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
-my $usecase  = "20thC_transient";
-my $GLC_NEC         = 10;
-foreach my $res ( @tran_res ) {
-   $options = "-res $res -use_case $usecase -envxml_dir . ";
-   &make_env_run();
-   eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-   is( $@, '', "$options" );
-   $cfiles->checkfilesexist( "$options", $mode );
-   $cfiles->shownmldiff( "default", "standard" );
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-   }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
-   }
-   &cleanup();
-}
-# Transient ssp_rcp scenarios that work
-$mode = "-phys clm5_0";
-system( "../configure -s $mode" );
-my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
-foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
-                      "1850-2100_SSP2-4.5_transient" ) {
-   foreach my $res ( @tran_res ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
-      &make_env_run();
-      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-      is( $@, '', "$options" );
-      $cfiles->checkfilesexist( "$options", $mode );
-      $cfiles->shownmldiff( "default", "standard" );
-      if ( defined($opts{'compare'}) ) {
-         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
-         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-      }
-      if ( defined($opts{'generate'}) ) {
-         $cfiles->copyfiles( "$options", $mode );
-      }
-      &cleanup();
-   }
+foreach my $mode ( "-phys clm5_0", "-phys ctsm5_1" ) {
+  # Transient 20th Century simulations
+  system( "../configure -s $mode" );
+  my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
+  my $usecase  = "20thC_transient";
+  my $GLC_NEC         = 10;
+  foreach my $res ( @tran_res ) {
+     $options = "-res $res -use_case $usecase -envxml_dir . ";
+     &make_env_run();
+     eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+     is( $@, '', "$options" );
+     $cfiles->checkfilesexist( "$options", $mode );
+     $cfiles->shownmldiff( "default", "standard" );
+     if ( defined($opts{'compare'}) ) {
+        $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+        $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+        $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+     }
+     if ( defined($opts{'generate'}) ) {
+        $cfiles->copyfiles( "$options", $mode );
+     }
+     &cleanup();
+  }
+  # Transient ssp_rcp scenarios that work
+  system( "../configure -s $mode" );
+  my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
+  foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
+                        "1850-2100_SSP2-4.5_transient" ) {
+     foreach my $res ( @tran_res ) {
+        $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+        &make_env_run();
+        eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+        is( $@, '', "$options" );
+        $cfiles->checkfilesexist( "$options", $mode );
+        $cfiles->shownmldiff( "default", "standard" );
+        if ( defined($opts{'compare'}) ) {
+           $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+           $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+           $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+        }
+        if ( defined($opts{'generate'}) ) {
+           $cfiles->copyfiles( "$options", $mode );
+        }
+        &cleanup();
+     }
+  }
 }
 # The SSP's that fail...
+$mode = "-phys clm5_0";
+system( "../configure -s $mode" );
 my $res = "0.9x1.25";
 foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
                       "1850-2100_SSP4-6.0_transient" ) {
@@ -1340,10 +1342,10 @@ foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transi
 }
 
 print "\n==================================================\n";
-print "Test clm4.5/clm5.0 resolutions \n";
+print "Test clm4.5/clm5.0/ctsm5_1 resolutions \n";
 print "==================================================\n";
 
-foreach my $phys ( "clm4_5", 'clm5_0' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'ctsm5_1' ) {
   my $mode = "-phys $phys";
   system( "../configure -s $mode" );
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
@@ -1436,10 +1438,16 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v6";
 my $simyr = "1850";
-foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0' ) {
+foreach my $phys ( "clm4_0", "clm4_5", 'clm5_0', 'ctsm5_1' ) {
   my $mode = "-phys $phys";
   system( "../configure -s $mode" );
-  foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
+  my @forclist = ();
+  if ( $phys == "ctsm5_1" ) {
+    @forclist = ( "GSWP3v1" );
+  } else {
+    @forclist = ( "CRUv7", "GSWP3v1", "cam6.0" );
+  }
+  foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode";

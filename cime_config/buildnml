@@ -79,12 +79,14 @@ def buildnml(case, caseroot, compname):
     clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
     if "clm4_5" in clm_config_opts:
         clm_phys = "clm4_5"
+    elif "ctsm5_1" in clm_config_opts:
+        clm_phys = "ctsm5_1"
     elif "clm5_0" in clm_config_opts:
         clm_phys = "clm5_0"
     elif "clm4_0" in clm_config_opts:
         clm_phys = "clm4_0"
     else:
-        expect(False, "CLM_CONFIG_OPTS must support either clm4_5, clm5_0, or clm4_0 physics")
+        expect(False, "CLM_CONFIG_OPTS must support either ctsm5_1, clm5_0, clm4_5, or clm4_0 physics")
 
     if clm_phys == "clm4_0":
         # call buildcpp to obtain clm_cppdefs if it is not set in env_build.xml

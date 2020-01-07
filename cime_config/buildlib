@@ -36,6 +36,8 @@ def _main_func():
         clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
         if "clm4_5" in clm_config_opts:
             clm_phys = "clm4_5"
+        elif "ctsm5_1" in clm_config_opts:
+            clm_phys = "ctsm5_1"
         elif "clm5_0" in clm_config_opts:
             clm_phys = "clm5_0"
         elif "clm4_0" in clm_config_opts:

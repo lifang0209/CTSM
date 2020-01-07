@@ -159,6 +159,8 @@ contains
          ufuel              => cnfire_const%ufuel                              , & ! Input:  [real(r8)         ]  (gC/m2) Upper threshold of fuel mass
          rh_hgh             => cnfire_const%rh_hgh                             , & ! Input:  [real(r8)         ]  (%) High relative humidity
          rh_low             => cnfire_const%rh_low                             , & ! Input:  [real(r8)         ]  (%) Low relative humidity
+         bt_min             => cnfire_const%bt_min                             , & ! Input:  [real(r8)         ]  (0-1) Minimum btran
+         bt_max             => cnfire_const%bt_max                             , & ! Input:  [real(r8)         ]  (0-1) Maximum btran
          cli_scale          => cnfire_const%cli_scale                          , & ! Input:  [real(r8)         ]  (/d) global constant for deforestation fires
          cropfire_a1        => cnfire_const%cropfire_a1                        , & ! Input:  [real(r8)         ]  (/hr) a1 parameter for cropland fire
          non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
@@ -167,8 +169,7 @@ contains
          
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
-         rswf_min           => pftcon%rswf_min                                 , & ! Input:
-         rswf_max           => pftcon%rswf_max                                 , & ! Input:
+
          btran2             => energyflux_inst%btran2_patch                    , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
          fsat               => soilhydrology_inst%fsat_col                     , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
          wf2                => waterstate_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
@@ -350,13 +351,11 @@ contains
               p = col%patchi(c) + pi - 1
 
               ! For non-crop -- natural vegetation and bare-soil
-              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1._r8 )then
+              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
                  if( .not. shr_infnan_isnan(btran2(p))) then
                     if (btran2(p)  <=  1._r8 ) then
-                       btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
-                      (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
-                      -rswf_min(patch%itype(p)))))*patch%wtcol(p)
-                        wtlf(c)      = wtlf(c)+patch%wtcol(p)
+                       btran_col(c) = btran_col(c)+btran2(p)*patch%wtcol(p)
+                       wtlf(c)      = wtlf(c)+patch%wtcol(p)
                     end if
                  end if
 
@@ -380,10 +379,10 @@ contains
                  ! whereas in fact the land cover change occurred when the column *was*
                  ! tropical closed forest.
                  if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
                  end if
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
                  end if
 
                  if (transient_landcover) then
@@ -407,7 +406,7 @@ contains
                           ! different seasons. But having deforestation spread evenly
                           ! throughout the year is much better than having it all
                           ! concentrated on January 1.)
-                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)*col%wtgcell(c)
+                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)
                        end if
                     end if
                  end if
@@ -599,15 +598,14 @@ contains
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
               arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
-                fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8) &
-                             *((1._r8-btran_col(c)/wtlf(c))**0.5_r8)
+                fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8)*((1._r8 -max(0._r8,&
+                    min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/(bt_max-bt_min))))**0.5_r8)
               else
                 fire_m   = 0._r8
               end if
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
-                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
+              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
                          *(1._r8-fs)*(1._r8-cropf_col(c))
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
@@ -633,9 +631,9 @@ contains
                     cri = (4.0_r8*trotr1_col(c)+1.8_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
                     cli = (max(0._r8,min(1._r8,(cri-prec60_col(c)*secspday)/cri))**0.5)* &
                          (max(0._r8,min(1._r8,(cri-prec10_col(c)*secspday)/cri))**0.5)* &
-                         (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
+                         max(0.0005_r8,min(1._r8,19._r8*dtrotr_col(c)*dayspyr*secspday/dt-0.001_r8))* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
-                    farea_burned(c) = fb*cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
+                    farea_burned(c) = cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)   
                  end if
